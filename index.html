@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zulti Live Draw</title>
+</head>
+<body>
+    <form id="drawForm">
+        <label for="drawnNumber">Enter Drawn Number (1-50): </label>
+        <input type="number" id="drawnNumber" min="1" max="50" required placeholder="1-50">
+        <button type="submit">Mark as Drawn</button>
+        <button type="button" id="resetBtn">Reset All</button>
+    </form>
+    <br>
+
+    <div id="result" style="font-weight: bold; margin-bottom: 10px;">
+        Best Choice: <span id="bestChoice">-</span> (Expected Gems: <span id="expectedGems">-</span>)
+    </div>
+
+    <table id="numberTable" border="1" cellpadding="5">
+        <tr>
+            <td id="num-1">1</td><td id="num-2">2</td><td id="num-3">3</td><td id="num-4">4</td><td id="num-5">5</td>
+        </tr>
+        <tr>
+            <td id="num-6">6</td><td id="num-7">7</td><td id="num-8">8</td><td id="num-9">9</td><td id="num-10">10</td>
+        </tr>
+        <tr>
+            <td id="num-11">11</td><td id="num-12">12</td><td id="num-13">13</td><td id="num-14">14</td><td id="num-15">15</td>
+        </tr>
+        <tr>
+            <td id="num-16">16</td><td id="num-17">17</td><td id="num-18">18</td><td id="num-19">19</td><td id="num-20">20</td>
+        </tr>
+        <tr>
+            <td id="num-21">21</td><td id="num-22">22</td><td id="num-23">23</td><td id="num-24">24</td><td id="num-25">25</td>
+        </tr>
+        <tr>
+            <td id="num-26">26</td><td id="num-27">27</td><td id="num-28">28</td><td id="num-29">29</td><td id="num-30">30</td>
+        </tr>
+        <tr>
+            <td id="num-31">31</td><td id="num-32">32</td><td id="num-33">33</td><td id="num-34">34</td><td id="num-35">35</td>
+        </tr>
+        <tr>
+            <td id="num-36">36</td><td id="num-37">37</td><td id="num-38">38</td><td id="num-39">39</td><td id="num-40">40</td>
+        </tr>
+        <tr>
+            <td id="num-41">41</td><td id="num-42">42</td><td id="num-43">43</td><td id="num-44">44</td><td id="num-45">45</td>
+        </tr>
+        <tr>
+            <td id="num-46">46</td><td id="num-47">47</td><td id="num-48">48</td><td id="num-49">49</td><td id="num-50">50</td>
+        </tr>
+    </table>
+
+    <script>
+        const drawnSet = new Set();
+
+        function updateCalculator() {
+            const undrawnList = [];
+            for (let i = 1; i <= 50; i++) {
+                if (!drawnSet.has(i)) {
+                    undrawnList.push(i);
+                }
+            }
+
+            if (undrawnList.length === 0) {
+                document.getElementById('bestChoice').innerText = "None (all drawn)";
+                document.getElementById('expectedGems').innerText = "0";
+                return;
+            }
+
+            let maxScore = -1;
+            let bestChoice = -1;
+
+            // Evaluate each undrawn candidate number c
+            for (const c of undrawnList) {
+                const cRow = Math.floor((c - 1) / 5);
+                const cCol = (c - 1) % 5;
+                const cParity = c % 2;
+
+                let score = 0;
+                for (const d of undrawnList) {
+                    const dRow = Math.floor((d - 1) / 5);
+                    const dCol = (d - 1) % 5;
+                    const dParity = d % 2;
+
+                    // Non-stacking rule: award only the highest matching condition
+                    if (dRow === cRow) {
+                        score += 20; // Same row (highest)
+                    } else if (dCol === cCol) {
+                        score += 10; // Same column
+                    } else if (dParity === cParity) {
+                        score += 5;  // Same odd/even
+                    }
+                }
+
+                // Strict > retains the smallest candidate number on ties
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestChoice = c;
+                }
+            }
+
+            const expectedGems = (maxScore / undrawnList.length).toFixed(4);
+            document.getElementById('bestChoice').innerText = bestChoice;
+            document.getElementById('expectedGems').innerText = expectedGems;
+        }
+
+        function markDrawn(val) {
+            if (val >= 1 && val <= 50) {
+                drawnSet.add(val);
+                const cell = document.getElementById('num-' + val);
+                if (cell) {
+                    cell.style.textDecoration = 'line-through';
+                    cell.style.backgroundColor = '#ccc';
+                }
+                updateCalculator();
+            }
+        }
+
+        document.getElementById('drawForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('drawnNumber');
+            const val = parseInt(input.value, 10);
+            markDrawn(val);
+            input.value = '';
+            input.focus();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            drawnSet.clear();
+            for (let i = 1; i <= 50; i++) {
+                const cell = document.getElementById('num-' + i);
+                if (cell) {
+                    cell.style.textDecoration = 'none';
+                    cell.style.backgroundColor = '';
+                }
+            }
+            updateCalculator();
+        });
+
+        // Initialize table click listeners & calculator
+        for (let i = 1; i <= 50; i++) {
+            const cell = document.getElementById('num-' + i);
+            if (cell) {
+                cell.addEventListener('click', function() {
+                    if (drawnSet.has(i)) {
+                        drawnSet.delete(i);
+                        cell.style.textDecoration = 'none';
+                        cell.style.backgroundColor = '';
+                    } else {
+                        drawnSet.add(i);
+                        cell.style.textDecoration = 'line-through';
+                        cell.style.backgroundColor = '#ccc';
+                    }
+                    updateCalculator();
+                });
+            }
+        }
+
+        updateCalculator();
+    </script>
+</body>
+</html>
