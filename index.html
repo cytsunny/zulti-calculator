@@ -83,8 +83,10 @@
                     const dParity = d % 2;
 
                     // Non-stacking rule: award only the highest matching condition
-                    if (dRow === cRow) {
-                        score += 20; // Same row (highest)
+                    if (d === c) {
+                        score += 50; // Exact match (highest)
+                    } else if (dRow === cRow) {
+                        score += 20; // Same row
                     } else if (dCol === cCol) {
                         score += 10; // Same column
                     } else if (dParity === cParity) {
